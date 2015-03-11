@@ -137,7 +137,7 @@ db_foreach dbqd.calendar.www.views.select_items {} {
     if { $day_of_week != $loop_day_of_week } {
         set day_width_$loop_day_of_week [expr ($day_width) + (($max_bumps+$all_day_events) * $event_bump_delta) + 5]
         set event_left_base 0
-        for {set i 0} {$i < $day_of_week} {incr i} {
+        for {set i 1} {$i < $day_of_week} {incr i} {
             incr event_left_base [set day_width_$i]
         }
         set loop_day_of_week $day_of_week
