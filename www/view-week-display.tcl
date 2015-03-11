@@ -37,6 +37,15 @@ if {[exists_and_not_null calendar_id_list]} {
     set calendars_clause [db_map dbqd.calendar.www.views.openacs_calendar] 
 }
 
+if {[exists_and_not_null object_type]} {
+    append calendars_clause "and e.related_object_type = :object_type"
+}
+
+if {[exists_and_not_null filter_clause]} {
+    append calendars_clause "and $filter_clause"
+}
+
+
 if {[empty_string_p $date]} {
     # Default to todays date in the users (the connection) timezone
     set server_now_time [dt_systime]
@@ -44,7 +53,9 @@ if {[empty_string_p $date]} {
     set date [lc_time_fmt $user_now_time "%x"]
 }
 
-set package_id [ad_conn package_id]
+if {![info exists package_id]} {
+    set package_id [ad_conn package_id]
+}
 set user_id [ad_conn user_id]
 
 set start_date $date

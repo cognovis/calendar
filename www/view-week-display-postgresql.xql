@@ -7,9 +7,8 @@
 <querytext>
         select   to_char(to_date(:start_date, 'YYYY-MM-DD'), 'D') 
         as       day_of_the_week,
-        to_char(next_day(to_date(:start_date, 'YYYY-MM-DD')- '1 week'::interval, :first_us_weekday), 'YYYY-MM-DD')
-        as       first_weekday_of_the_week,
-        to_char(next_day(to_date(:start_date, 'YYYY-MM-DD'), :last_us_weekday), 'YYYY-MM-DD')
+	date_trunc('week', to_date(:start_date, 'YYYY-MM-DD'))::date as first_weekday_of_the_week,
+	(date_trunc('week', to_date(:start_date, 'YYYY-MM-DD')+ '6 days'::interval))::date
         as       last_weekday_of_the_week
         from     dual
 </querytext>
