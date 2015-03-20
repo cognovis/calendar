@@ -1,9 +1,5 @@
 <?xml version="1.0"?>
 
-<queryset>
-   <rdbms><type>postgresql</type><version>7.1</version></rdbms>
-	
-	
 <partialquery name="dow">
 <querytext>
    , extract(dow from start_date) as day_of_week
@@ -43,7 +39,7 @@ order by to_char(start_date, 'J'), to_char(start_date,'HH24:MI')
 
 <fullquery name="select_week_info">      
 <querytext>
-to_char(to_date(:start_date, 'YYYY-MM-DD'), 'D') 
+select   to_char(to_date(:start_date, 'YYYY-MM-DD'), 'D') 
 as day_of_the_week,
 cast(next_day(to_date(:start_date, 'YYYY-MM-DD') - cast('7 days' as interval), :first_us_weekday) as date)
 as first_weekday_date,

@@ -70,7 +70,6 @@ set last_us_weekday [lindex [lc_get -locale en_US day] [expr [expr $first_day_of
 
 db_1row select_week_info {}
 
-ds_comment "FIRST:: $first_weekday_date -- $last_weekday_date"    
 set current_weekday 0
 
 #s/item_id/url
