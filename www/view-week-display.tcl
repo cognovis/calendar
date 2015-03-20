@@ -67,9 +67,10 @@ set first_day_of_week [lc_get firstdayofweek]
 set first_us_weekday [lindex [lc_get -locale en_US day] $first_day_of_week]
 set last_us_weekday [lindex [lc_get -locale en_US day] [expr [expr $first_day_of_week + 6] % 7]]
 
-db_1row select_weekday_info {}
+
 db_1row select_week_info {}
-    
+
+ds_comment "FIRST:: $first_weekday_date -- $last_weekday_date"    
 set current_weekday 0
 
 #s/item_id/url
@@ -95,8 +96,8 @@ multirow create items \
     num_attachments
 
 # Convert date from user timezone to system timezone
-set first_weekday_of_the_week_tz [lc_time_conn_to_system "$first_weekday_of_the_week 00:00:00"]
-set last_weekday_of_the_week_tz [lc_time_conn_to_system "$last_weekday_of_the_week 00:00:00"]
+set first_weekday_of_the_week_tz [lc_time_conn_to_system "$first_weekday_date 00:00:00"]
+set last_weekday_of_the_week_tz [lc_time_conn_to_system "$last_weekday_date 00:00:00"]
 
 set order_by_clause " order by to_char(start_date, 'J'), to_char(start_date,'HH24:MI')"
 set interval_limitation_clause [db_map dbqd.calendar.www.views.week_interval_limitation]
