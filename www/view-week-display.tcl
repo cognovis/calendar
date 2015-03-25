@@ -67,23 +67,17 @@ set first_day_of_week [lc_get firstdayofweek]
 set first_us_weekday [lindex [lc_get -locale en_US day] $first_day_of_week]
 set last_us_weekday [lindex [lc_get -locale en_US day] [expr [expr $first_day_of_week + 6] % 7]]
 
-
 db_1row select_week_info {
-select to_char(to_date(:start_date, 'YYYY-MM-DD'), 'D') 
-as day_of_the_week,
-cast(next_day(to_date(:start_date, 'YYYY-MM-DD') - cast('7 days' as interval), :first_us_weekday) as date)
-as first_weekday_date,
-to_char(next_day(to_date(:start_date, 'YYYY-MM-DD') - cast('7 days' as interval), :first_us_weekday),'J')
-as first_weekday_julian,
-cast(next_day(to_date(:start_date, 'YYYY-MM-DD') - cast('7 days' as interval), :first_us_weekday) + cast('6 days' as interval) as date)
-as last_weekday_date,
-to_char(next_day(to_date(:start_date, 'YYYY-MM-DD') - cast('7 days' as interval), :first_us_weekday) + cast('6 days' as interval),'J') 
-as last_weekday_julian,
-cast(:start_date::timestamptz - cast('7 days' as interval) as date) as last_week,
-to_char(:start_date::timestamptz - cast('7 days' as interval), 'Month DD, YYYY') as last_week_pretty,
-cast(:start_date::timestamptz + cast('7 days' as interval) as date) as next_week,
-to_char(:start_date::timestamptz + cast('7 days' as interval), 'Month DD, YYYY') as next_week_pretty
-from     dual
+    select to_char(to_date(:start_date, 'YYYY-MM-DD'), 'D') as day_of_the_week,
+    cast(next_day(to_date(:start_date, 'YYYY-MM-DD') - cast('7 days' as interval), :first_us_weekday) as date) as first_weekday_date,
+    to_char(next_day(to_date(:start_date, 'YYYY-MM-DD') - cast('7 days' as interval), :first_us_weekday),'J') as first_weekday_julian,
+    cast(next_day(to_date(:start_date, 'YYYY-MM-DD') - cast('7 days' as interval), :first_us_weekday) + cast('6 days' as interval) as date) as last_weekday_date,
+    to_char(next_day(to_date(:start_date, 'YYYY-MM-DD') - cast('7 days' as interval), :first_us_weekday) + cast('6 days' as interval),'J') as last_weekday_julian,
+    cast(:start_date::timestamptz - cast('7 days' as interval) as date) as last_week,
+    to_char(:start_date::timestamptz - cast('7 days' as interval), 'Month DD, YYYY') as last_week_pretty,
+    cast(:start_date::timestamptz + cast('7 days' as interval) as date) as next_week,
+    to_char(:start_date::timestamptz + cast('7 days' as interval), 'Month DD, YYYY') as next_week_pretty
+    from     dual
 }
 
 set day_of_week $day_of_the_week
@@ -127,7 +121,45 @@ set loop_day_of_week 0
 set max_bumps 0
 set all_day_events 0
 
-db_foreach dbqd.calendar.www.views.select_items {} {
+db_foreach select_items "
+    select   to_char(start_date, 'YYYY-MM-DD HH24:MI:SS') as ansi_start_date,
+             to_char(end_date, 'YYYY-MM-DD HH24:MI:SS') as ansi_end_date,
+             to_number(to_char(start_date,'HH24'),'90') as start_hour,
+             to_number(to_char(start_date,'MI'),'90') as start_minutes,
+             to_number(to_char(start_date,'SSSSS'),'99990') as start_seconds,
+             to_number(to_char(end_date,'HH24'),'90') as end_hour,
+             to_number(to_char(end_date,'MI'),'90') as end_minutes,
+             to_number(to_char(end_date,'SSSSS'),'99990') as end_seconds,
+             coalesce(e.name, a.name) as name,
+             coalesce(e.status_summary, a.status_summary) as status_summary,
+             coalesce(e.description, a.description) as description,
+             e.event_id as item_id,
+             cit.type as item_type,
+             cals.calendar_id,
+             cals.calendar_name,
+             cals.package_id as cal_package_id,
+             (select count(1) from attachments where object_id=e.event_id) as num_attachments,
+              extract(dow from start_date) as day_of_week
+             $additional_select_clause
+    from     acs_activities a,
+             acs_events e,
+             timespans s,
+             time_intervals t,
+             calendars cals,
+             cal_items ci left join
+             cal_item_types cit on cit.item_type_id = ci.item_type_id
+    where    e.timespan_id = s.timespan_id
+    and      s.interval_id = t.interval_id
+    and      e.activity_id = a.activity_id
+    and      start_date between $interval_limitation_clause
+    and      ci.cal_item_id= e.event_id
+    and      cals.calendar_id = ci.on_which_calendar
+    and      e.event_id = ci.cal_item_id
+    $additional_limitations_clause
+    $calendars_clause
+    $order_by_clause
+
+" {
     # Convert from system timezone to user timezone
     set ansi_start_date [lc_time_system_to_conn $ansi_start_date]
     set ansi_end_date [lc_time_system_to_conn $ansi_end_date]
