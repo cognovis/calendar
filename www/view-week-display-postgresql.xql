@@ -39,7 +39,7 @@ order by to_char(start_date, 'J'), to_char(start_date,'HH24:MI')
 
 <fullquery name="select_week_info">      
 <querytext>
-select   to_char(to_date(:start_date, 'YYYY-MM-DD'), 'D') 
+select to_char(to_date(:start_date, 'YYYY-MM-DD'), 'D') 
 as day_of_the_week,
 cast(next_day(to_date(:start_date, 'YYYY-MM-DD') - cast('7 days' as interval), :first_us_weekday) as date)
 as first_weekday_date,

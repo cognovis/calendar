@@ -68,8 +68,25 @@ set first_us_weekday [lindex [lc_get -locale en_US day] $first_day_of_week]
 set last_us_weekday [lindex [lc_get -locale en_US day] [expr [expr $first_day_of_week + 6] % 7]]
 
 
-db_1row select_week_info {}
+db_1row select_week_info {
+select to_char(to_date(:start_date, 'YYYY-MM-DD'), 'D') 
+as day_of_the_week,
+cast(next_day(to_date(:start_date, 'YYYY-MM-DD') - cast('7 days' as interval), :first_us_weekday) as date)
+as first_weekday_date,
+to_char(next_day(to_date(:start_date, 'YYYY-MM-DD') - cast('7 days' as interval), :first_us_weekday),'J')
+as first_weekday_julian,
+cast(next_day(to_date(:start_date, 'YYYY-MM-DD') - cast('7 days' as interval), :first_us_weekday) + cast('6 days' as interval) as date)
+as last_weekday_date,
+to_char(next_day(to_date(:start_date, 'YYYY-MM-DD') - cast('7 days' as interval), :first_us_weekday) + cast('6 days' as interval),'J') 
+as last_weekday_julian,
+cast(:start_date::timestamptz - cast('7 days' as interval) as date) as last_week,
+to_char(:start_date::timestamptz - cast('7 days' as interval), 'Month DD, YYYY') as last_week_pretty,
+cast(:start_date::timestamptz + cast('7 days' as interval) as date) as next_week,
+to_char(:start_date::timestamptz + cast('7 days' as interval), 'Month DD, YYYY') as next_week_pretty
+from     dual
+}
 
+set day_of_week $day_of_the_week
 set current_weekday 0
 
 #s/item_id/url
